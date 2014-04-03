@@ -1,0 +1,647 @@
+
+/**
+* Get the polynomial surface
+*/
+static void get_surface_P(list<PT3D*> pt3ds, double *P)
+{
+	int ptN = 0, ii = 0;
+	double *A = NULL, *Z = NULL;
+	PT3D *pt3d = NULL;
+	
+	ptN = pt3ds.size();
+	A = new double[ptN * 6];
+	Z = new double[ptN];
+
+	ii = 0;
+	for(list<PT3D*>::iterator ptIter = pt3ds.begin(); ptIter != pt3ds.end(); ++ptIter)
+	{
+		pt3d = *ptIter;
+		A[ii*6 + 0] = 1;
+		A[ii*6 + 1] = pt3d->x;
+		A[ii*6 + 2] = pt3d->y;
+		A[ii*6 + 3] = pt3d->x*pt3d->x;
+		A[ii*6 + 4] = pt3d->x*pt3d->y;
+		A[ii*6 + 5] = pt3d->y*pt3d->y;
+		Z[ii] = pt3d->z;
+
+		ii++;
+	}
+	least_square(A, Z, P, 6, ptN, 1, ptN);
+
+	if (A != NULL)
+	{
+		delete []A;
+		A = NULL;
+	}
+	if (Z != NULL)
+	{
+		delete []Z;
+		Z = NULL;
+	}
+}
+
+/**
+* Get the interpolation value
+*/
+static double get_surface_z(const PT3D *pt3d, const double *P)
+{
+	double z = P[0] + P[1]*pt3d->x + P[2]*pt3d->y + P[3]*pt3d->x*pt3d->x + P[4]*pt3d->x*pt3d->y + P[5]*pt3d->y*pt3d->y;
+	return z;
+}
+
+
+
+else if(header.format_id == 3)
+	{
+		lasrec3 *rec = new lasrec3[LAS_BUFFER];
+			
+		while (pt_num > 0) 
+		{
+			tmp_num = fread(rec, sizeof(lasrec3), LAS_BUFFER, fp);
+			pt_num -= tmp_num;
+
+			if (pt_num >0 && tmp_num != LAS_BUFFER) 
+			{
+				printf("read las data error ... \n");
+				if(rec != NULL)
+				{
+					delete []rec;
+					rec = NULL;
+				}
+			}
+			else
+			{
+				if (pt_num < 0)
+				{
+					tmp_num =  header.records_number % LAS_BUFFER;
+				}
+
+				for(ii = 0; ii < tmp_num; ii++)
+				{
+					pt = &pts[pt_ii];
+
+					pt->x = rec[ii].x * header.xscale + header.xoffset;
+					pt->y = rec[ii].y * header.yscale + header.yoffset;
+					pt->z = rec[ii].z * header.zscale + header.zoffset;
+					pt->intensity = rec[ii].intensity;
+					//pt->return_id = rec[ii].return_id;
+					//pt->return_number = rec[ii].return_number;
+					//pt->scan_direction = rec[ii].scan_direction;
+					//pt->flight_edge = rec[ii].flight_edge;
+
+					pt->class_id = rec[ii].class_id;
+					pt->scan_angle = rec[ii].scan_angle;
+					pt->user_data = rec[ii].user_data;
+					pt->source_id = rec[ii].source_id;
+					pt->gps_time = rec[ii].gps_time;
+
+					pt_ii++;
+				}
+			}
+		}
+		if(rec != NULL)
+		{
+			delete []rec;
+			rec = NULL;
+		}
+	}
+
+
+static void find_spatial_region(FILE *fp, lasheader *header)
+{
+	if(fp == NULL)
+	{
+		return;
+	}
+
+	header->minx = header->miny = header->minz = 999999999.0;
+	header->maxx = header->maxy = header->maxz = -999999999.0;
+
+	int ii = 0, tmp_num = 0, pt_ii = 0;
+	unsigned int pt_num = header->records_number;	
+	double xx = 0.0, yy = 0.0, zz = 0.0;
+	
+	fseek(fp, header->data_offset, SEEK_SET);
+	
+	if(header->format_id == 0)
+	{
+		lasrec0 *rec = new lasrec0[LAS_BUFFER];
+			
+		while (pt_num>0)
+		{
+			tmp_num = fread(rec, sizeof(lasrec0), LAS_BUFFER, fp);
+			pt_num -= tmp_num;
+
+			if (pt_num>0 && tmp_num != LAS_BUFFER) 
+			{
+				printf("read las data error ... \n");
+				if(rec != NULL) 
+				{
+					delete []rec;
+					rec = NULL;
+				}
+			}			
+			else 
+			{
+				if (pt_num<0) 
+				{
+					tmp_num = header->records_number % LAS_BUFFER;
+				}
+
+				for(ii=0; ii<tmp_num; ii++) 
+				{
+					xx = rec[ii].x * header->xscale + header->xoffset;
+					yy = rec[ii].y * header->yscale + header->yoffset;
+					zz = rec[ii].z * header->zscale + header->zoffset;
+
+					header->minx = xx < header->minx ? xx : header->minx;
+					header->maxx = xx > header->maxx ? xx : header->maxx;
+					header->miny = yy < header->miny ? yy : header->miny;
+					header->maxy = yy > header->maxy ? yy : header->maxy;
+					header->minz = zz < header->minz ? zz : header->minz;
+					header->maxz = zz > header->maxz ? zz : header->maxz;					
+
+					pt_ii++;
+				}
+
+				break;
+			}
+		}
+		if(rec != NULL) 
+		{
+			delete []rec;
+			rec = NULL;
+		}
+	}
+	else if(header->format_id == 1)	
+	{
+		lasrec1 *rec = new lasrec1[LAS_BUFFER];
+			
+		while (pt_num > 0) 
+		{
+			tmp_num = fread(rec, sizeof(lasrec1), LAS_BUFFER, fp);
+			pt_num -= tmp_num;
+
+			if (pt_num >0 && tmp_num != LAS_BUFFER) 
+			{
+				printf("read las data error ... \n");
+				if(rec != NULL)
+				{
+					delete []rec;
+					rec = NULL;
+				}
+			}
+			else
+			{
+				if (pt_num < 0)
+				{
+					tmp_num =  header->records_number % LAS_BUFFER;
+				}
+
+				for(ii = 0; ii < tmp_num; ii++)
+				{
+					xx = rec[ii].x * header->xscale + header->xoffset;
+					yy = rec[ii].y * header->yscale + header->yoffset;
+					zz = rec[ii].z * header->zscale + header->zoffset;
+
+					header->minx = xx < header->minx ? xx : header->minx;
+					header->maxx = xx > header->maxx ? xx : header->maxx;
+					header->miny = yy < header->miny ? yy : header->miny;
+					header->maxy = yy > header->maxy ? yy : header->maxy;
+					header->minz = zz < header->minz ? zz : header->minz;
+					header->maxz = zz > header->maxz ? zz : header->maxz;					
+
+					pt_ii++;
+				}
+			}
+		}
+		if(rec != NULL)
+		{
+			delete []rec;
+			rec = NULL;
+		}
+	}
+	else if(header->format_id == 3)
+	{
+		lasrec3 *rec = new lasrec3[LAS_BUFFER];
+			
+		while (pt_num > 0) 
+		{
+			tmp_num = fread(rec, sizeof(lasrec3), LAS_BUFFER, fp);
+			pt_num -= tmp_num;
+
+			if (pt_num >0 && tmp_num != LAS_BUFFER) 
+			{
+				printf("read las data error ... \n");
+				if(rec != NULL)
+				{
+					delete []rec;
+					rec = NULL;
+				}
+			}
+			else
+			{
+				if (pt_num < 0)
+				{
+					tmp_num =  header->records_number % LAS_BUFFER;
+				}
+
+				for(ii = 0; ii < tmp_num; ii++)
+				{
+					xx = rec[ii].x * header->xscale + header->xoffset;
+					yy = rec[ii].y * header->yscale + header->yoffset;
+					zz = rec[ii].z * header->zscale + header->zoffset;
+
+					header->minx = xx < header->minx ? xx : header->minx;
+					header->maxx = xx > header->maxx ? xx : header->maxx;
+					header->miny = yy < header->miny ? yy : header->miny;
+					header->maxy = yy > header->maxy ? yy : header->maxy;
+					header->minz = zz < header->minz ? zz : header->minz;
+					header->maxz = zz > header->maxz ? zz : header->maxz;					
+
+					pt_ii++;
+				}
+			}
+		}
+		if(rec != NULL)
+		{
+			delete []rec;
+			rec = NULL;
+		}
+	}
+
+	if(pt_ii != header->records_number) 
+	{
+		printf("some data lost in the las file! \n");			
+	}
+}
+
+static void convert_las_file(FILE *fp, lasheader *header, const char *out_path)
+{
+	lasheader *header1 = new lasheader;
+	memcpy(header1, header, sizeof(lasheader));
+	header1->data_offset = sizeof(lasheader);
+	header1->minx = 2949484.99;
+	header1->maxx = 2950208.15;
+	header1->miny = 288174.69;
+	header1->maxy = 288936.71;
+	header1->minz = 717.36;
+	header1->maxz = 837.14;
+
+	FILE *fp1 = fopen(out_path, "wb+");
+	fwrite(header1, sizeof(lasheader), 1, fp1);
+
+	lasrec3 *rec = new lasrec3[LAS_BUFFER];
+	unsigned int tmp_num = 0, pt_ii = 0;
+	unsigned int pt_num = header->records_number;	
+
+	while (pt_num > 0) 
+	{
+		tmp_num = fread(rec, sizeof(lasrec3), LAS_BUFFER, fp);
+		pt_num -= tmp_num;
+
+		if (pt_num >0 && tmp_num != LAS_BUFFER) 
+		{
+			printf("read las data error ... \n");
+			if(rec != NULL)
+			{
+				delete []rec;
+				rec = NULL;
+			}
+		}
+		else
+		{
+			if (pt_num < 0)
+			{
+				tmp_num =  header->records_number % LAS_BUFFER;
+			}
+
+			fwrite(rec, sizeof(lasrec3), tmp_num, fp1);
+			pt_ii += tmp_num;
+		}
+	}
+	fclose(fp1);
+
+	if(pt_ii != header->records_number) 
+	{
+		printf("convert the las file failed! \n");			
+	}
+
+	delete header1;
+	if(rec != NULL)
+	{
+		delete []rec;
+		rec = NULL;
+	}
+}
+
+#include "gdal_priv.h"
+static void resample_raster_las(FILE *fp, lasheader *header, double factor)
+{
+	lasrec3 *rec = new lasrec3[LAS_BUFFER];	
+	unsigned int ii  = 0, tmp_num = 0, pt_num = header->records_number;	
+	double xx = 0.0, yy = 0.0, zz = 0.0;
+	int rasterH = 0, rasterW = 0, hh = 0, ww = 0, pos = 0;
+
+	rasterH = int((header->maxy - header->miny)/factor) + 1;
+	rasterW = int((header->maxx - header->minx)/factor) + 1;
+
+	double *buf_z_min = new double[rasterH*rasterW];
+	double *buf_z_max = new double[rasterH*rasterW];
+	for(hh = 0; hh < rasterH; ++hh)
+	{
+		for(ww = 0; ww < rasterW; ++ww)
+		{
+			pos = hh * rasterW + ww;
+			buf_z_min[pos] = 999999.0;
+			buf_z_max[pos] = -999999.0;
+		}
+	}
+
+	while (pt_num > 0) 
+	{
+		tmp_num = fread(rec, sizeof(lasrec3), LAS_BUFFER, fp);
+		pt_num -= tmp_num;
+
+		if (pt_num >0 && tmp_num != LAS_BUFFER) 
+		{
+			printf("read las data error ... \n");
+			if(rec != NULL)
+			{
+				delete []rec;
+				rec = NULL;
+			}
+			return;
+		}
+		else
+		{
+			if (pt_num < 0)
+			{
+				tmp_num =  header->records_number % LAS_BUFFER;
+			}
+
+			for(ii = 0; ii < tmp_num; ii++)
+			{
+				xx = rec[ii].x * header->xscale + header->xoffset;
+				yy = rec[ii].y * header->yscale + header->yoffset;
+				zz = rec[ii].z * header->zscale + header->zoffset;
+
+				hh = int((yy-header->miny)/factor + 0.5);
+				ww = int((xx-header->minx)/factor + 0.5);
+				pos = hh * rasterW + ww;
+
+				if(zz < buf_z_min[pos])
+				{
+					buf_z_min[pos] = zz;
+				}
+				if(zz > buf_z_max[pos])
+				{
+					buf_z_max[pos] = zz;
+				}
+			}
+		}
+	}
+
+	for(hh = 0; hh < rasterH; ++hh)
+	{
+		for(ww = 0; ww < rasterW; ++ww)
+		{
+			pos = hh * rasterW + ww;
+			if(buf_z_min[pos] == 999999.0)
+			{
+				buf_z_min[pos] = NAN;
+			}
+
+			if(buf_z_max[pos] == -999999.0)
+			{
+				buf_z_max[pos] = NAN;
+			}
+		}
+	}
+
+	//out put to raster
+	double geoTf[6] = {header->minx, factor, 0, header->miny, 0, factor };
+
+    GDALAllRegister();
+	GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName("hfa");
+
+	GDALDataset *poDataset = poDriver->Create("E:/data/3g/z_max.img", rasterW, rasterH, 1, GDT_Float64, NULL);
+	poDataset->SetGeoTransform(geoTf);
+	GDALRasterBand *poBand = poDataset->GetRasterBand(1);
+	poBand->RasterIO(GF_Write, 0, 0, rasterW, rasterH, buf_z_max, rasterW, rasterH, GDT_Float64, 0, 0);
+
+	double min = 999999.0, max = -999999.0, mean = 0.0, dev = 0.0;
+	int num = 0;
+	for(hh = 0; hh < rasterH; ++hh)
+	{
+		for(ww = 0; ww < rasterW; ++ww)
+		{
+			pos = hh * rasterW + ww;
+			if(buf_z_max[pos] == NAN)
+			{
+				continue;
+			}
+
+			min = buf_z_max[pos] < min ? buf_z_max[pos] : min;
+			max = buf_z_max[pos] > max ? buf_z_max[pos] : max;
+			mean += buf_z_max[pos];
+			num++;
+		}
+	}
+	mean = mean/num;
+
+	for(hh = 0; hh < rasterH; ++hh)
+	{
+		for(ww = 0; ww < rasterW; ++ww)
+		{
+			pos = hh * rasterW + ww;
+			if(buf_z_max[pos] == NAN)
+			{
+				continue;
+			}
+
+			dev += pow(buf_z_max[pos]-mean, 2.0);
+		}
+	}
+	dev = sqrt(dev/num);
+
+	poBand->SetStatistics(min, max, mean, dev);
+	poBand->SetNoDataValue(NAN);
+	GDALClose((GDALDatasetH) poDataset);
+
+	poDataset = poDriver->Create("E:/data/3g/z_min.img", rasterW, rasterH, 1, GDT_Float64, NULL);
+	poDataset->SetGeoTransform(geoTf);
+	poBand = poDataset->GetRasterBand(1);
+	poBand->RasterIO(GF_Write, 0, 0, rasterW, rasterH, buf_z_min, rasterW, rasterH, GDT_Float64, 0, 0);
+
+	min = 999999.0;
+	max = -999999.0;
+	mean = 0.0;
+	dev = 0.0;
+	num = 0;
+	for(hh = 0; hh < rasterH; ++hh)
+	{
+		for(ww = 0; ww < rasterW; ++ww)
+		{
+			pos = hh * rasterW + ww;
+			if(buf_z_min[pos] == NAN)
+			{
+				continue;
+			}
+
+			min = buf_z_min[pos] < min ? buf_z_min[pos] : min;
+			max = buf_z_min[pos] > max ? buf_z_min[pos] : max;
+			mean += buf_z_min[pos];
+			num++;
+		}
+	}
+	mean = mean/num;
+
+	for(hh = 0; hh < rasterH; ++hh)
+	{
+		for(ww = 0; ww < rasterW; ++ww)
+		{
+			pos = hh * rasterW + ww;
+			if(buf_z_min[pos] == NAN)
+			{
+				continue;
+			}
+
+			dev += pow(buf_z_min[pos]-mean, 2.0);
+		}
+	}
+	dev = sqrt(dev/num);
+
+	poBand->SetStatistics(min, max, mean, dev);
+	poBand->SetNoDataValue(NAN);
+	GDALClose((GDALDatasetH) poDataset);
+
+	if(rec != NULL)
+	{
+		delete []rec;
+		rec = NULL;
+	}
+	if(buf_z_min != NULL)
+	{
+		delete []buf_z_min;
+		buf_z_min = NULL;
+	}
+	if(buf_z_max != NULL)
+	{
+		delete []buf_z_max;
+		buf_z_max = NULL;
+	}
+}
+
+
+static void clip_test(FILE *fp, lasheader *header)
+{
+	lasheader *header1 = new lasheader;
+	memcpy(header1, header, sizeof(lasheader));
+	header1->data_offset = sizeof(lasheader);
+	header1->minx = header->minx + 300;
+	header1->maxx = header1->minx + 70.0;
+	header1->miny = header->miny + 300;
+	header1->maxy = header1->miny + 70.0;
+	header1->minz = 9999999.0;
+	header1->maxz = -9999999.0;
+	header1->records_number = 0;
+
+	FILE *fp1 = fopen("E:/data/3g/data_tmp", "wb+");
+	lasrec3 *rec = new lasrec3[LAS_BUFFER];
+	lasrec3 *out_buf = new lasrec3[LAS_BUFFER];
+	unsigned int ii  = 0, tmp_num = 0, pt_num = header->records_number;	
+	unsigned current_num = 0;
+	double xx = 0.0, yy = 0.0, zz = 0.0;
+
+	while (pt_num > 0) 
+	{
+		tmp_num = fread(rec, sizeof(lasrec3), LAS_BUFFER, fp);
+		pt_num -= tmp_num;
+
+		if (pt_num >0 && tmp_num != LAS_BUFFER) 
+		{
+			printf("read las data error ... \n");
+			if(rec != NULL)
+			{
+				delete []rec;
+				rec = NULL;
+			}
+			if(out_buf != NULL)
+			{
+				delete []out_buf;
+				out_buf = NULL;
+			}
+			return;
+		}
+		else
+		{
+			if (pt_num < 0)
+			{
+				tmp_num =  header->records_number % LAS_BUFFER;
+			}
+
+			for(ii = 0; ii < tmp_num; ii++)
+			{
+				xx = rec[ii].x * header->xscale + header->xoffset;
+				yy = rec[ii].y * header->yscale + header->yoffset;
+				zz = rec[ii].z * header->zscale + header->zoffset;
+
+				if(xx >= header1->minx && xx<= header1->maxx && yy >= header1->miny && yy <= header1->maxy)
+				{
+					if(current_num >= LAS_BUFFER)
+					{
+						fwrite(out_buf, sizeof(lasrec3), current_num, fp1);
+						fflush(fp1);
+						header1->records_number += current_num;
+						current_num = 0;
+					}
+					
+					header1->minz = zz < header1->minz ? zz : header1->minz;
+					header1->maxz = zz > header1->maxz ? zz : header1->maxz;	
+					out_buf[current_num] = rec[ii];
+					current_num++;
+					
+				}
+
+			}
+		}
+	}
+
+	if(current_num != 0)
+	{
+		fwrite(out_buf, sizeof(lasrec3), current_num, fp1);
+		fflush(fp1);
+		header1->records_number += current_num;
+		current_num = 0;
+	}
+
+	int size = ftell(fp1);
+	char *buf = new char[size];
+	fseek(fp1, 0, SEEK_SET);
+	fread(buf, sizeof(char), size, fp1);
+	fclose(fp1);
+
+	FILE *fp2 = fopen("E:/data/3g/data_tmp.las", "wb+");
+	fwrite(header1, sizeof(lasheader), 1, fp2);
+	fflush(fp2);
+	fwrite(buf, sizeof(char), size, fp2);
+	fflush(fp2);
+	fclose(fp2);
+
+	//	
+	delete header1;
+	if(rec != NULL)
+	{
+		delete []rec;
+		rec = NULL;
+	}
+	if(out_buf != NULL)
+	{
+		delete []out_buf;
+		out_buf = NULL;
+	}
+}
+
+
+

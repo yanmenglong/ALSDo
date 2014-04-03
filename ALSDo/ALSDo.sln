@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lidar-core", "lidar-core\lidar-core.vcxproj", "{DEB0F086-3C0F-4894-9380-FF952C4D4475}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{80A0D91C-C9DA-4B5D-834A-0EC245B035E0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALSDo", "ALSDo\ALSDo.vcxproj", "{5020A610-47A1-4229-9511-61DE01E9D22F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DEB0F086-3C0F-4894-9380-FF952C4D4475}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DEB0F086-3C0F-4894-9380-FF952C4D4475}.Debug|Win32.Build.0 = Debug|Win32
+		{DEB0F086-3C0F-4894-9380-FF952C4D4475}.Release|Win32.ActiveCfg = Release|Win32
+		{DEB0F086-3C0F-4894-9380-FF952C4D4475}.Release|Win32.Build.0 = Release|Win32
+		{80A0D91C-C9DA-4B5D-834A-0EC245B035E0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{80A0D91C-C9DA-4B5D-834A-0EC245B035E0}.Debug|Win32.Build.0 = Debug|Win32
+		{80A0D91C-C9DA-4B5D-834A-0EC245B035E0}.Release|Win32.ActiveCfg = Release|Win32
+		{80A0D91C-C9DA-4B5D-834A-0EC245B035E0}.Release|Win32.Build.0 = Release|Win32
+		{5020A610-47A1-4229-9511-61DE01E9D22F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5020A610-47A1-4229-9511-61DE01E9D22F}.Debug|Win32.Build.0 = Debug|Win32
+		{5020A610-47A1-4229-9511-61DE01E9D22F}.Release|Win32.ActiveCfg = Release|Win32
+		{5020A610-47A1-4229-9511-61DE01E9D22F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		QtVersion = qt-4.7.4
+	EndGlobalSection
+EndGlobal
